@@ -10,26 +10,26 @@ import (
 	"time"
 )
 
+func handleInterruptSignal(ws *websocket.Conn) {
+	sigchan := make(chan os.Signal, 10)
+	signal.Notify(sigchan, os.Interrupt)
+	<-sigchan
+
+	ws.Close()
+	log.Println("Connection closed")
+	log.Println("Program killed")
+	os.Exit(0)
+}
 func main() {
 	origin := "http://localhost/"
 	url := "ws://localhost:12345/ping"
 
 	ws, err := websocket.Dial(url, "", origin)
-	go func() {
-		sigchan := make(chan os.Signal, 10)
-		signal.Notify(sigchan, os.Interrupt)
-		<-sigchan
-
-		ws.Close()
-		log.Println("Connection closed")
-		log.Println("Program killed")
-		os.Exit(0)
-	}()
-
-	defer ws.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer ws.Close()
+	go handleInterruptSignal(ws)
 
 	for {
 		mesg := net.Message{os.Args[1], "1.0"}
