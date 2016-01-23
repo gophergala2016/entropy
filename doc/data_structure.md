@@ -9,16 +9,18 @@
 * casting
   * components
     * type of component (vocal, gesture, material component, focus)
-    * key combination
+    * key/letter combination
   * casting time
 
 # Spellbook
 
 * list of spells
 
-# Casting checker
+# Casting tracker
 
-* Spell
+Helps the server knows where in the casting process the player is
+
+* Spell: the spell that is currently being casted
 * current keytype (eg. already type a, b, d, z. Still needs f, r, a to cast the spell)
 
 
