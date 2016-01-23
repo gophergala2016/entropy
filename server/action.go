@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"termbox"
 	"time"
 
 	"golang.org/x/net/websocket"
@@ -53,6 +54,9 @@ func (a Action) SpellSucceeded() bool {
 	}
 
 	for _, v := range a.spellCheck {
+		time.Sleep(50 * time.Millisecond)
+
+		fmt.Println("test")
 		if !v {
 			return false
 		}
@@ -112,13 +116,15 @@ type Ingredient struct {
 	keyCombination []rune // The keys the client have to fire during the ingredient set
 }
 
-// Initializing lists that will be use to store spells and actions
+// Initializing lists that will be use to store spells
 
 var spellList = []Spell{}
+var keyEvenChan chan keyboardEvent
 
 func WaitAndSee() {
 	for {
 		// We should look to key use here
+
 	}
 }
 
@@ -140,5 +146,61 @@ func main() {
 
 	go a1.StartSpell()
 
-	WaitAndSee()
+}
+
+// ----------------DONNEES DEJA PRESENTES DANS KEYBOARD.GO -------------//
+type keyboardEventType int
+
+const (
+	MOVE keyboardEventType = 1 + iota
+	RETRY
+	END
+)
+
+type keyboardEvent struct {
+	eventType keyboardEventType
+	key       termbox.Key
+}
+
+func keyToDirection(k termbox.Key) direction {
+	switch k {
+	case termbox.KeyArrowLeft:
+		return LEFT
+	case termbox.KeyArrowDown:
+		return DOWN
+	case termbox.KeyArrowRight:
+		return RIGHT
+	case termbox.KeyArrowUp:
+		return UP
+	default:
+		return 0
+	}
+}
+
+func listenToKeyboard(evChan chan keyboardEvent) {
+	termbox.SetInputMode(termbox.InputEsc)
+
+	for {
+		switch ev := termbox.PollEvent(); ev.Type {
+		case termbox.EventKey:
+			switch ev.Key {
+			case termbox.KeyArrowLeft:
+				evChan <- keyboardEvent{eventType: MOVE, key: ev.Key}
+			case termbox.KeyArrowDown:
+				evChan <- keyboardEvent{eventType: MOVE, key: ev.Key}
+			case termbox.KeyArrowRight:
+				evChan <- keyboardEvent{eventType: MOVE, key: ev.Key}
+			case termbox.KeyArrowUp:
+				evChan <- keyboardEvent{eventType: MOVE, key: ev.Key}
+			case termbox.KeyEsc:
+				evChan <- keyboardEvent{eventType: END, key: ev.Key}
+			default:
+				if ev.Ch == 'r' {
+					evChan <- keyboardEvent{eventType: RETRY, key: ev.Key}
+				}
+			}
+		case termbox.EventError:
+			panic(ev.Err)
+		}
+	}
 }
