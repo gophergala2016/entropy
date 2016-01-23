@@ -2,65 +2,112 @@ package main
 
 import (
 	"fmt"
+	"github.com/gophergala2016/entropy/models"
 	"github.com/gophergala2016/entropy/net"
 	"golang.org/x/net/websocket"
 	"io"
+	"log"
 	"net/http"
 )
 
 type regConn struct {
-	action string
-	ws     *websocket.Conn
+	action   string
+	username string
+	ws       *websocket.Conn
 }
+
+type registrationFeedback struct {
+	action   string
+	username string
+	done     bool
+}
+
+var regFeedback = make(chan registrationFeedback, 10)
 
 var conns = make(map[*websocket.Conn]interface{})
 var connreg = make(chan regConn, 10)
 
-func addConn(ws *websocket.Conn) {
-	connreg <- regConn{"+", ws}
+func addConn(username string, ws *websocket.Conn) {
+	connreg <- regConn{"+", username, ws}
 }
 
-func rmConn(ws *websocket.Conn) {
-	connreg <- regConn{"-", ws}
+func rmConn(username string, ws *websocket.Conn) {
+	connreg <- regConn{"-", username, ws}
 }
 
-func PongServer(ws *websocket.Conn) {
-	var msg net.Message
-	addConn(ws)
+func GameServer(ws *websocket.Conn) {
+	var cmsg net.Connection
+	var curruser string
 
+	err := websocket.JSON.Receive(ws, &cmsg)
+	if err != nil {
+		log.Println("Wrong connection message. Stop listening to those weird attempts of communication", err)
+		ws.Close()
+		return
+	}
+	addConn(cmsg.Username, ws)
+	curruser = cmsg.Username
 	for {
-		err := websocket.JSON.Receive(ws, &msg)
+		var msg net.GetUserList //interface{}
+		err = websocket.JSON.Receive(ws, &msg)
 		if err == io.EOF {
-			rmConn(ws)
+			rmConn(curruser, ws)
 			return
 		}
-
-		if msg.Msg != "ping" {
-			websocket.JSON.Send(ws, net.Message{"no.", "1.0"})
-		} else {
-			websocket.JSON.Send(ws, net.Message{"pong", "1.0"})
+		if err != nil {
+			log.Println(curruser, "Bad message, ignoring.", err)
+			continue
 		}
+
+		//switch m := msg.(type) {
+		//case net.GetUserList:
+		gp := make(models.GamePlayers)
+		for _, p := range gamePlayers {
+			if p.State == msg.State {
+				gp[p.Name] = p
+			}
+		}
+
+		websocket.JSON.Send(ws, gp)
+		//default:
+		//	log.Println("Unknown message:", m)
+		//}
+
 	}
+
 }
 
 func connRegistrator() {
 	go func() {
 		for {
-			b := <-connreg
-			if b.action == "+" {
-				conns[b.ws] = nil
-				fmt.Println("Client connected.")
-			} else if b.action == "-" {
-				delete(conns, b.ws)
-				fmt.Println("Client disconnected.")
+			r := <-connreg
+			if r.action == "+" {
+				if gp, ok := gamePlayers[r.username]; ok {
+					gp.State = models.StateConnected
+					gp.Ws = r.ws
+				} else {
+					gamePlayers[r.username] = &models.GamePlayer{r.username, r.ws, 100, models.StateConnected}
+				}
+				fmt.Println("Client", r.username, "connected.")
+			} else if r.action == "-" {
+				if gp, ok := gamePlayers[r.username]; ok {
+					gp.State = models.StateDisconnected
+					gp.Ws = nil
+				} else {
+					fmt.Println("weird.")
+				}
+
+				fmt.Println("Client", r.username, "disconnected.")
 			}
 		}
 	}()
 }
 
+var gamePlayers = make(models.GamePlayers)
+
 func main() {
 	connRegistrator()
-	http.Handle("/ping", websocket.Handler(PongServer))
+	http.Handle("/game", websocket.Handler(GameServer))
 	err := http.ListenAndServe(":12345", nil)
 	if err != nil {
 		panic("ListenAndServe:" + err.Error())

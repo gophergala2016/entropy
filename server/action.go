@@ -5,24 +5,15 @@ import (
 	"termbox"
 	"time"
 
-	"golang.org/x/net/websocket"
+	"github.com/gophergala2016/entropy/models"
 )
-
-/* The gameplayer is linked to a client connected to the server.
- * Maybe we could set a name at client start...
- */
-type GamePlayer struct {
-	name string          // The name of the player
-	ws   *websocket.Conn // The connection informations
-	hp   int             // Player health points
-}
 
 /* An action is starting by the client.
  * It contains all player and spell informations, and the current stage of this spell launch.
  */
 type Action struct {
-	player *GamePlayer // The player that initiated this action
-	spell  Spell       // Spell chosen when the action started
+	player *models.GamePlayer // The player that initiated this action
+	spell  Spell              // Spell chosen when the action started
 
 	//spellStep      int // The index of the current ingredient used
 	//ingredientStep int // The index of the next expected key
@@ -66,11 +57,11 @@ func (a Action) SpellSucceeded() bool {
 }
 
 func (a Action) startMessage() {
-	fmt.Println(a.player.name + " spelling " + a.spell.name + " to date : " + a.initialTime.Format(time.UnixDate))
+	fmt.Println(a.player.Name + " spelling " + a.spell.name + " to date : " + a.initialTime.Format(time.UnixDate))
 }
 
 func (a Action) spellSucceededMessage() {
-	fmt.Println(a.player.name + " lance correctement le sort" + a.spell.name)
+	fmt.Println(a.player.Name + " lance correctement le sort" + a.spell.name)
 }
 
 func (a Action) endOfCastTime() time.Time {
@@ -128,9 +119,10 @@ func WaitAndSee() {
 	}
 }
 
+/*
 func main() {
 
-	p1 := GamePlayer{"Tyriada", nil, 100}
+	p1 := models.GamePlayer{"Tyriada", nil, 100}
 
 	i_batWing := Ingredient{"bat wing", []rune{'h', 'j', 'k'}}
 	i_bearClaw := Ingredient{"bear claw", []rune{'g', 'h', 'j'}}
@@ -146,7 +138,8 @@ func main() {
 
 	go a1.StartSpell()
 
-}
+	WaitAndSee()
+}*/
 
 // ----------------DONNEES DEJA PRESENTES DANS KEYBOARD.GO -------------//
 type keyboardEventType int
