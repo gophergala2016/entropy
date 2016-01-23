@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"termbox"
+	"github.com/nsf/termbox-go"
 	"time"
 
 	"github.com/gophergala2016/entropy/models"
@@ -122,7 +122,7 @@ func WaitAndSee() {
 /*
 func main() {
 
-	p1 := models.GamePlayer{"Tyriada", nil, 100}
+	p1 := models.GamePlayer{Name: "Tyriada", Ws: nil, Hp: 100}
 
 	i_batWing := Ingredient{"bat wing", []rune{'h', 'j', 'k'}}
 	i_bearClaw := Ingredient{"bear claw", []rune{'g', 'h', 'j'}}
@@ -137,9 +137,8 @@ func main() {
 	a1 := Action{&p1, s_magicMissile, []bool{}, []bool{}, time.Now()}
 
 	go a1.StartSpell()
-
-	WaitAndSee()
-}*/
+}
+*/
 
 // ----------------DONNEES DEJA PRESENTES DANS KEYBOARD.GO -------------//
 type keyboardEventType int
@@ -148,6 +147,15 @@ const (
 	MOVE keyboardEventType = 1 + iota
 	RETRY
 	END
+)
+
+type direction int
+
+const (
+	LEFT direction = iota
+	DOWN
+	RIGHT
+	UP
 )
 
 type keyboardEvent struct {
