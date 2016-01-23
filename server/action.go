@@ -30,12 +30,79 @@ type Action struct {
 	ingredientCheck []bool // Saved resultas of ingredients checks
 
 	initialTime time.Time // Time at the start of this spell
+
+}
+
+func (a Action) IngredientSucceeded(index int) bool {
+	if len(a.ingredientCheck) < len(a.spell.ingredientList[index].keyCombination) {
+		return false
+	}
+
+	for _, v := range a.ingredientCheck {
+		if !v {
+			return false
+		}
+	}
+	return true
+
+}
+
+func (a Action) SpellSucceeded() bool {
+	if len(a.spellCheck) < len(a.spell.ingredientList) {
+		return false
+	}
+
+	for _, v := range a.spellCheck {
+		if !v {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (a Action) startMessage() {
+	fmt.Println(a.player.name + " spelling " + a.spell.name + " to date : " + a.initialTime.Format(time.UnixDate))
+}
+
+func (a Action) spellSucceededMessage() {
+	fmt.Println(a.player.name + " lance correctement le sort" + a.spell.name)
+}
+
+func (a Action) endOfCastTime() time.Time {
+	return a.initialTime.Add(time.Duration(a.spell.casttime) * time.Millisecond)
+}
+
+func (a Action) remainingToEndDuration() time.Duration {
+	return a.endOfCastTime().Sub(time.Now())
+}
+
+func (a Action) castTimeFinished() bool {
+	return a.endOfCastTime().Before(time.Now())
+}
+
+func (a *Action) StartSpell() {
+	a.initialTime = time.Now()
+	a.startMessage()
+
+	for {
+		if a.castTimeFinished() {
+
+			fmt.Println("End of cast !")
+			break
+		} else {
+
+		}
+	}
+
 }
 
 type Spell struct {
-	name           string       // Spell name
-	spellType      string       // Spell type (DirectDamage, DamageOverTime, Mesmerize...)
-	value          int          // the effectiveness of the spell
+	name      string // Spell name
+	spellType string // Spell type (DirectDamage, DamageOverTime, Mesmerize...)
+	value     int    // the effectiveness of the spell
+	casttime  int    // cast time of the spell in ms
+
 	duration       int          // duration of the effect in ms
 	ingredientList []Ingredient // List of spell ingredients
 }
@@ -46,23 +113,13 @@ type Ingredient struct {
 }
 
 // Initializing lists that will be use to store spells and actions
-var actions = []Action{}
+
 var spellList = []Spell{}
 
-func CheckActionList() {
-	//go func() {
+func WaitAndSee() {
 	for {
-
-		if len(actions) == 0 {
-			continue
-		}
-		fmt.Println("Il y a " + (string)(len(actions)) + " actions.")
-		for a := range actions {
-			fmt.Println(a.player.name + " lance le sort" + a.spell.name + " à la date : " + a.initialTime.Format(time.UnixDate))
-		}
-
+		// We should look to key use here
 	}
-	//}()
 }
 
 func main() {
@@ -75,10 +132,13 @@ func main() {
 	s_magicMissile := Spell{"Magic missile",
 		"DirectDamage",
 		12,
+		5000,
 		0,
 		[]Ingredient{i_batWing, i_batWing, i_bearClaw}}
 
 	a1 := Action{&p1, s_magicMissile, []bool{}, []bool{}, time.Now()}
-	fmt.Println(a1.spell.name)
-	CheckActionList()
+
+	go a1.StartSpell()
+
+	WaitAndSee()
 }
