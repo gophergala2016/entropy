@@ -1,19 +1,17 @@
-package main
+package models
 
 import (
 	"fmt"
 	"time"
-
-	"github.com/gophergala2016/entropy/models"
 )
 
 /* An action is starting by the client.
  * It contains all player and spell informations, and the current stage of this spell launch.
  */
 type Action struct {
-	caster *models.GamePlayer // The player that initiated this action
-	target *models.GamePlayer // The target of this spell
-	spell  Spell              // Spell chosen when the action started
+	caster *GamePlayer // The player that initiated this action
+	target *GamePlayer // The target of this spell
+	spell  Spell       // Spell chosen when the action started
 
 	spellCheck      []bool // Saved results of spell checks
 	ingredientCheck []bool // Saved resultas of ingredients checks
@@ -89,7 +87,7 @@ func (a *Action) StartSpell() {
 	a.initialTime = time.Now()
 	a.startMessage()
 
-	a.keyChan = make(chan rune, 100)
+	a.keyChan = make(chan rune, 2)
 
 	// if stepFinished is true,  success have been set
 	var stepFinished = false
@@ -108,7 +106,7 @@ func (a *Action) StartSpell() {
 				success = false
 			}
 
-			a.spell.StartEffect(a.caster, a.target, success)
+			a.LaunchEffect(success)
 
 			break
 		} else {
@@ -155,51 +153,22 @@ func (a *Action) StartSpell() {
 
 }
 
-type Spell struct {
-	name      string // Spell name
-	spellType string // Spell type (DirectDamage, DamageOverTime, Mesmerize...)
-	value     int    // the effectiveness of the spell
-	casttime  int    // cast time of the spell in ms
-
-	duration       int          // duration of the effect in ms
-	ingredientList []Ingredient // List of spell ingredients
-}
-
-func (s Spell) StartEffect(caster *models.GamePlayer, target *models.GamePlayer, success bool) {
+func (a *Action) LaunchEffect(success bool) {
 
 	if success {
-		fmt.Println(caster.Name + " succeeds launching " + s.name)
+		fmt.Println(a.caster.Name + " succeeds launching " + a.spell.name)
 	} else {
-		fmt.Println(caster.Name + " missed launching " + s.name)
+		fmt.Println(a.caster.Name + " missed launching " + a.spell.name)
 	}
+
+	var effect SpellEffect
+
 	if success {
-		switch s.spellType {
-		case "DirectDamage":
-			target.Hp -= s.value
-			fmt.Println(caster.Name+" hits "+target.Name+", and does ", s.value, " damage points ! (", target.Hp, " / ", target.MaxHp, " )")
-		default:
-		}
+		effect = SpellEffect{*a, time.Now()}
+
 	} else {
-		// TODO : random spell startEffect !
+		effect = SpellEffect{Action{}, time.Now()}
 	}
+	effect.Start()
 
 }
-
-type Ingredient struct {
-	name           string // Ingredient name
-	keyCombination []rune // The keys the client have to fire during the ingredient set
-}
-
-// Initializing lists that will be use to store spells
-
-var i_batWing = Ingredient{"bat wing", []rune{'h', 'j', 'k'}}
-var i_bearClaw = Ingredient{"bear claw", []rune{'g', 'h', 'j'}}
-
-var s_magicMissile = Spell{"Magic missile",
-	"DirectDamage",
-	12,
-	5000,
-	0,
-	[]Ingredient{i_batWing, i_batWing, i_bearClaw}}
-
-var spellList = []Spell{s_magicMissile}

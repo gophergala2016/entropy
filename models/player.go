@@ -17,11 +17,12 @@ const (
  * Maybe we could set a name at client start...
  */
 type GamePlayer struct {
-	Name  string          // The name of the player
-	Ws    *websocket.Conn // The connection informations
-	Hp    int             // Player health points
-	MaxHp int             // Player max Health points
-	State GamePlayerState
+	Name       string          // The name of the player
+	Ws         *websocket.Conn // The connection informations
+	Hp         int             // Player health points
+	MaxHp      int             // Player max Health points
+	State      GamePlayerState
+	EffectList []SpellEffect
 }
 
 type GamePlayers map[string]*GamePlayer

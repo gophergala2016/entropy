@@ -88,7 +88,7 @@ func connRegistrator() {
 					gp.State = models.StateConnected
 					gp.Ws = r.ws
 				} else {
-					gamePlayers[r.username] = &models.GamePlayer{r.username, r.ws, 100, 100, models.StateConnected}
+					gamePlayers[r.username] = &models.GamePlayer{r.username, r.ws, 100, 100, models.StateConnected, []models.SpellEffect{}}
 				}
 
 				fmt.Println("Client", r.username, "connected.")
