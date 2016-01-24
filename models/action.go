@@ -84,8 +84,11 @@ func (a Action) castTimeFinished() bool {
 }
 
 func (a *Action) StartSpell() {
+
 	a.initialTime = time.Now()
 	a.startMessage()
+
+	SendOnActionChannels(ActionEvent{SPELL_CAST_BEGIN, *a})
 
 	a.keyChan = make(chan rune, 2)
 
@@ -100,6 +103,8 @@ func (a *Action) StartSpell() {
 		if a.castTimeFinished() {
 
 			fmt.Println("End of cast !")
+
+			SendOnActionChannels(ActionEvent{SPELL_CAST_FINISH, *a})
 
 			if !stepFinished {
 				// the player didn't send enough key, he missed !
@@ -164,11 +169,41 @@ func (a *Action) LaunchEffect(success bool) {
 	var effect SpellEffect
 
 	if success {
-		effect = SpellEffect{*a, time.Now()}
+		if a.spell.spellType == "DamageOverTime" && a.target.IsPoisoned() {
+			fmt.Println(a.target.Name + " is already poisoned!")
+			effect = SpellEffect{Action{}, time.Now(), 0, false}
+		} else {
+			effect = SpellEffect{*a, time.Now(), 0, false}
+		}
 
 	} else {
-		effect = SpellEffect{Action{}, time.Now()}
+		effect = SpellEffect{Action{}, time.Now(), 0, false}
 	}
+
 	effect.Start()
 
+}
+
+type ActionEventType int
+
+const (
+	SPELL_CAST_BEGIN ActionEventType = iota + 1
+	SPELL_CAST_FINISH
+)
+
+type ActionEvent struct {
+	eventType ActionEventType
+	action    Action
+}
+
+var ActionChannel_Test = make(chan ActionEvent, 2)
+var ActionChannel_Server = make(chan ActionEvent, 2)
+
+func SendOnActionChannels(actionEvent ActionEvent) {
+	go func() {
+		ActionChannel_Test <- actionEvent
+	}()
+	go func() {
+		ActionChannel_Server <- actionEvent
+	}()
 }

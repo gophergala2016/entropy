@@ -20,6 +20,7 @@ type Ingredient struct {
 
 var i_batWing = Ingredient{"bat wing", []rune{'h', 'j', 'k'}}
 var i_bearClaw = Ingredient{"bear claw", []rune{'g', 'h', 'j'}}
+var i_snakeVenom = Ingredient{"snake venom", []rune{'k', 'k', 'j', 'h'}}
 
 var s_magicMissile = Spell{name: "Magic missile",
 	spellType:      "DirectDamage",
@@ -27,7 +28,7 @@ var s_magicMissile = Spell{name: "Magic missile",
 	casttime:       2000,
 	duration:       0,
 	timer:          0,
-	ingredientList: []Ingredient{i_batWing, i_batWing, i_bearClaw}}
+	ingredientList: []Ingredient{i_batWing, i_batWing}}
 
 var s_cyanide = Spell{name: "Cyanide",
 	spellType:      "DamageOverTime",
@@ -36,5 +37,29 @@ var s_cyanide = Spell{name: "Cyanide",
 	duration:       10000,
 	timer:          1200,
 	ingredientList: []Ingredient{i_bearClaw, i_batWing}}
+
+var s_curePoison = Spell{name: "Cure Poison",
+	spellType:      "CurePoison",
+	value:          0,
+	casttime:       3000,
+	duration:       0,
+	timer:          0,
+	ingredientList: []Ingredient{i_bearClaw, i_snakeVenom}}
+
+var s_sleep = Spell{name: "Sleep",
+	spellType:      "Sleep",
+	value:          0,
+	casttime:       5000,
+	duration:       8000,
+	timer:          1000,
+	ingredientList: []Ingredient{i_snakeVenom, i_snakeVenom, i_batWing}}
+
+var s_layingonofhands = Spell{name: "Laying on of hands",
+	spellType:      "Heal",
+	value:          25,
+	casttime:       3500,
+	duration:       0,
+	timer:          0,
+	ingredientList: []Ingredient{i_snakeVenom, i_bearClaw, i_bearClaw}}
 
 var spellList = []Spell{s_magicMissile, s_cyanide}

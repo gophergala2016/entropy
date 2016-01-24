@@ -2,19 +2,33 @@ package models
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
 type SpellEffect struct {
 	action    Action    // the spell that fired this effect
 	startTime time.Time // when the effect has started
+	ID        int
+	forceStop bool
 }
 
-func (se SpellEffect) Start() {
+func randInt(min int, max int) int {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return min + rand.Intn(max-min)
+}
+
+func (se *SpellEffect) Start() {
+
+	se.ID = randInt(0, 99999)
+
+	if se.action.target != nil {
+		se.action.target.AddEffect(se)
+	}
 
 	go func() {
 
-		if se.action.caster == nil {
+		if se.action.caster == nil || se.forceStop {
 			se.End()
 			return
 		}
@@ -23,7 +37,7 @@ func (se SpellEffect) Start() {
 
 		if se.action.spell.duration > 0 {
 			for {
-				if !se.OnPulse() {
+				if !se.OnPulse() || se.forceStop {
 					se.End()
 					return
 				}
@@ -37,6 +51,19 @@ func (se SpellEffect) Start() {
 }
 
 func (se SpellEffect) End() {
+
+	if se.action.target != nil {
+		se.action.target.RemoveEffect(se.ID)
+	}
+
+	switch se.action.spell.spellType {
+
+	case "DamageOverTime":
+		fmt.Println(se.action.target.Name + " is not poisoned yet.")
+	case "Sleep":
+		fmt.Println(se.action.target.Name + " is not asleep yet.")
+	}
+
 	SendOnEffectChannels(SpellEffectEvent{SPELL_EFFECT_END, se})
 }
 
@@ -45,8 +72,29 @@ func (se SpellEffect) OnDirectEffect() bool {
 		return false
 	}
 
-	se.action.target.Hp -= se.action.spell.value
-	fmt.Println(se.action.caster.Name+" hits "+se.action.target.Name+", and does ", se.action.spell.value, " damage points ! (", se.action.target.Hp, " / ", se.action.target.MaxHp, " )")
+	switch se.action.spell.spellType {
+
+	case "Heal":
+		se.action.target.Hp += se.action.spell.value
+		fmt.Println(se.action.caster.Name+" heals "+se.action.target.Name+", and gives ", se.action.spell.value, " health points ! (", se.action.target.Hp, " / ", se.action.target.MaxHp, " )")
+
+	case "DirectDamage":
+		se.action.target.Hp -= se.action.spell.value
+		fmt.Println(se.action.caster.Name+" hits "+se.action.target.Name+", and does ", se.action.spell.value, " damage points ! (", se.action.target.Hp, " / ", se.action.target.MaxHp, " )")
+
+	case "DamageOverTime":
+		se.action.target.Hp -= se.action.spell.value
+		fmt.Println(se.action.caster.Name+" hits "+se.action.target.Name+", and does ", se.action.spell.value, " damage points ! (", se.action.target.Hp, " / ", se.action.target.MaxHp, " )")
+	case "CurePoison":
+		if se.action.target.RemovePoison() {
+			fmt.Println(se.action.target.Name + " healed from poison.")
+		} else {
+			fmt.Println(se.action.target.Name + " is not poisoned.")
+		}
+	case "Sleep":
+		fmt.Println(se.action.target.Name + " falls asleep.")
+
+	}
 
 	SendOnEffectChannels(SpellEffectEvent{SPELL_EFFECT_DIRECT, se})
 	return true
