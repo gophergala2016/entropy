@@ -48,7 +48,7 @@ func GameServer(ws *websocket.Conn) {
 	addConn(cmsg.Username, ws)
 	curruser = cmsg.Username
 	for {
-		var msg net.GetUserList
+		var msg net.Message
 		err = websocket.JSON.Receive(ws, &msg)
 		if err == io.EOF {
 			rmConn(curruser, ws)
@@ -58,15 +58,22 @@ func GameServer(ws *websocket.Conn) {
 			log.Println(curruser, "Bad message, ignoring.", err)
 			continue
 		}
+		switch {
+		case msg.GetUserList != nil:
 
-		gp := make(models.GamePlayers)
-		for _, p := range gamePlayers {
-			if p.State == msg.State {
-				gp[p.Name] = p
+			gp := make(models.GamePlayers)
+			for _, p := range gamePlayers {
+				log.Println("iterating to ", p, msg)
+				if p.State == msg.GetUserList.State {
+					gp[p.Name] = p
+				}
 			}
+			log.Println(curruser, "Sending userlist of ", msg.GetUserList.State, gp, err)
+			websocket.JSON.Send(ws, net.Message{ResponseUserList: &net.ResponseUserList{gp}})
+		case msg.RequestFight != nil:
+			log.Println("fighting now")
+			websocket.JSON.Send(ws, net.Message{ResponseFight: &net.ResponseFight{"lol"}})
 		}
-
-		websocket.JSON.Send(ws, net.Message{ResponseUserList: &net.ResponseUserList{gp}})
 	}
 
 }
@@ -82,6 +89,7 @@ func connRegistrator() {
 				} else {
 					gamePlayers[r.username] = &models.GamePlayer{r.username, r.ws, 100, models.StateConnected}
 				}
+
 				fmt.Println("Client", r.username, "connected.")
 			} else if r.action == "-" {
 				if gp, ok := gamePlayers[r.username]; ok {

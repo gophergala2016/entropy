@@ -9,6 +9,8 @@ type Message struct {
 	Disconnection    *Disconnection
 	GetUserList      *GetUserList
 	ResponseUserList *ResponseUserList
+	RequestFight     *RequestFight
+	ResponseFight    *ResponseFight
 }
 
 type Connection struct {
@@ -25,4 +27,11 @@ type GetUserList struct {
 
 type ResponseUserList struct {
 	GamePlayers models.GamePlayers
+}
+
+type RequestFight struct {
+	Opponentname string
+}
+type ResponseFight struct {
+	Opponentname string
 }

@@ -12,7 +12,6 @@ import (
 	"os/user"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func handleInterruptSignal(ws *websocket.Conn) {
@@ -25,6 +24,8 @@ func handleInterruptSignal(ws *websocket.Conn) {
 	log.Println("Program killed")
 	os.Exit(0)
 }
+
+var msgq = make(chan net.Message, 10)
 
 var username string
 
@@ -53,15 +54,26 @@ func main() {
 		log.Println("Couldn't send connection message", err)
 		return
 	}
-	for {
-		websocket.JSON.Send(ws, net.GetUserList{State: models.StateConnected})
-		var msg net.Message
-		websocket.JSON.Receive(ws, &msg)
-		switch {
-		case msg.ResponseUserList != nil:
-			displayUserList(&msg.ResponseUserList.GamePlayers)
+
+	go func() {
+		for {
+			var msg net.Message
+			websocket.JSON.Receive(ws, &msg)
+			switch {
+			case msg.ResponseUserList != nil:
+				displayUserList(&msg.ResponseUserList.GamePlayers)
+			case msg.ResponseFight != nil:
+				log.Println("Go go go fighting")
+			}
 		}
-		time.Sleep(1 * time.Second)
+	}()
+
+	msgq <- net.Message{GetUserList: &net.GetUserList{models.StateConnected}}
+	for {
+		select {
+		case m := <-msgq:
+			websocket.JSON.Send(ws, m)
+		}
 	}
 }
 
@@ -79,7 +91,7 @@ func displayUserList(gp *models.GamePlayers) {
 	}
 	correctInput := false
 	for !correctInput {
-		fmt.Println("\nSelect your opponent (number ID): ")
+		fmt.Print("\nSelect your opponent (number ID): ")
 		reader := bufio.NewReader(os.Stdin)
 		line, err := reader.ReadString('\n')
 		if err != nil {
@@ -92,13 +104,18 @@ func displayUserList(gp *models.GamePlayers) {
 			if len(userlist) <= userid {
 				fmt.Println("Bad number, or list empty")
 				correctInput = true
+				msgq <- net.Message{GetUserList: &net.GetUserList{models.StateConnected}}
 				continue
 			}
 			fmt.Println("Chosen", userlist[userid], "from", userlist)
 			correctInput = true
+			requestFighting(userlist[userid])
 		}
 
 	}
 
 }
 
+func requestFighting(opponentname string) {
+	msgq <- net.Message{RequestFight: &net.RequestFight{opponentname}}
+}
