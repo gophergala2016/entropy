@@ -77,18 +77,7 @@ func main() {
 	}
 }
 
-func displayUserList(gp *models.GamePlayers) {
-	fmt.Println("Connected Users:")
-	i := 0
-	userlist := make([]string, 0, len(*gp))
-	for k, _ := range *gp {
-		if k == username {
-			continue
-		}
-		fmt.Printf("%1d) %s\n", i, k)
-		userlist = append(userlist, k)
-		i++
-	}
+func userListInteraction(userlist []string) {
 	correctInput := false
 	for !correctInput {
 		fmt.Print("\nSelect your opponent (number ID): ")
@@ -113,7 +102,21 @@ func displayUserList(gp *models.GamePlayers) {
 		}
 
 	}
+}
 
+func displayUserList(gp *models.GamePlayers) {
+	fmt.Println("Connected Users:")
+	i := 0
+	userlist := make([]string, 0, len(*gp))
+	for k, _ := range *gp {
+		if k == username {
+			continue
+		}
+		fmt.Printf("%1d) %s\n", i, k)
+		userlist = append(userlist, k)
+		i++
+	}
+	userListInteraction(userlist)
 }
 
 func requestFighting(opponentname string) {
