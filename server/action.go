@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/nsf/termbox-go"
 	"time"
 
 	"github.com/gophergala2016/entropy/models"
@@ -22,6 +21,8 @@ type Action struct {
 	ingredientCheck []bool // Saved resultas of ingredients checks
 
 	initialTime time.Time // Time at the start of this spell
+
+	keyEvenChan chan keyboardEvent // The key event channel that manage the action
 
 }
 
@@ -81,6 +82,7 @@ func (a *Action) StartSpell() {
 	a.startMessage()
 
 	for {
+
 		if a.castTimeFinished() {
 
 			fmt.Println("End of cast !")
@@ -110,98 +112,3 @@ type Ingredient struct {
 // Initializing lists that will be use to store spells
 
 var spellList = []Spell{}
-var keyEvenChan chan keyboardEvent
-
-func WaitAndSee() {
-	for {
-		// We should look to key use here
-
-	}
-}
-
-/*
-func main() {
-
-	p1 := models.GamePlayer{Name: "Tyriada", Ws: nil, Hp: 100}
-
-	i_batWing := Ingredient{"bat wing", []rune{'h', 'j', 'k'}}
-	i_bearClaw := Ingredient{"bear claw", []rune{'g', 'h', 'j'}}
-
-	s_magicMissile := Spell{"Magic missile",
-		"DirectDamage",
-		12,
-		5000,
-		0,
-		[]Ingredient{i_batWing, i_batWing, i_bearClaw}}
-
-	a1 := Action{&p1, s_magicMissile, []bool{}, []bool{}, time.Now()}
-
-	go a1.StartSpell()
-}
-*/
-
-// ----------------DONNEES DEJA PRESENTES DANS KEYBOARD.GO -------------//
-type keyboardEventType int
-
-const (
-	MOVE keyboardEventType = 1 + iota
-	RETRY
-	END
-)
-
-type direction int
-
-const (
-	LEFT direction = iota
-	DOWN
-	RIGHT
-	UP
-)
-
-type keyboardEvent struct {
-	eventType keyboardEventType
-	key       termbox.Key
-}
-
-func keyToDirection(k termbox.Key) direction {
-	switch k {
-	case termbox.KeyArrowLeft:
-		return LEFT
-	case termbox.KeyArrowDown:
-		return DOWN
-	case termbox.KeyArrowRight:
-		return RIGHT
-	case termbox.KeyArrowUp:
-		return UP
-	default:
-		return 0
-	}
-}
-
-func listenToKeyboard(evChan chan keyboardEvent) {
-	termbox.SetInputMode(termbox.InputEsc)
-
-	for {
-		switch ev := termbox.PollEvent(); ev.Type {
-		case termbox.EventKey:
-			switch ev.Key {
-			case termbox.KeyArrowLeft:
-				evChan <- keyboardEvent{eventType: MOVE, key: ev.Key}
-			case termbox.KeyArrowDown:
-				evChan <- keyboardEvent{eventType: MOVE, key: ev.Key}
-			case termbox.KeyArrowRight:
-				evChan <- keyboardEvent{eventType: MOVE, key: ev.Key}
-			case termbox.KeyArrowUp:
-				evChan <- keyboardEvent{eventType: MOVE, key: ev.Key}
-			case termbox.KeyEsc:
-				evChan <- keyboardEvent{eventType: END, key: ev.Key}
-			default:
-				if ev.Ch == 'r' {
-					evChan <- keyboardEvent{eventType: RETRY, key: ev.Key}
-				}
-			}
-		case termbox.EventError:
-			panic(ev.Err)
-		}
-	}
-}
