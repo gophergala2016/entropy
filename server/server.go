@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/gophergala2016/entropy/models"
-	"github.com/gophergala2016/entropy/net"
-	"golang.org/x/net/websocket"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/gophergala2016/entropy/models"
+	"github.com/gophergala2016/entropy/net"
+	"golang.org/x/net/websocket"
 )
 
 type regConn struct {
@@ -87,7 +88,7 @@ func connRegistrator() {
 					gp.State = models.StateConnected
 					gp.Ws = r.ws
 				} else {
-					gamePlayers[r.username] = &models.GamePlayer{r.username, r.ws, 100, models.StateConnected}
+					gamePlayers[r.username] = &models.GamePlayer{r.username, r.ws, 100, 100, models.StateConnected}
 				}
 
 				fmt.Println("Client", r.username, "connected.")

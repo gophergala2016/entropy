@@ -20,6 +20,7 @@ type GamePlayer struct {
 	Name  string          // The name of the player
 	Ws    *websocket.Conn // The connection informations
 	Hp    int             // Player health points
+	MaxHp int             // Player max Health points
 	State GamePlayerState
 }
 

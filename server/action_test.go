@@ -10,20 +10,51 @@ import (
 
 func TestStartSpell(t *testing.T) {
 	Convey("Given player Tyriada with 100hp and magic missile spell placed as an action", t, func() {
-		p1 := GamePlayer{"Tyriada", nil, 100, StateConnected}
-		i_batWing := Ingredient{"bat wing", []rune{'h', 'j', 'k'}}
-		i_bearClaw := Ingredient{"bear claw", []rune{'g', 'h', 'j'}}
+		p1 := GamePlayer{"Tyriada", nil, 100, 100, StateConnected}
+		p2 := GamePlayer{"Maeltor", nil, 100, 100, StateConnected}
 
-		s_magicMissile := Spell{"Magic missile",
-			"DirectDamage",
-			12,
-			5000,
-			0,
-			[]Ingredient{i_batWing, i_batWing, i_bearClaw}}
-		a1 := Action{&p1, s_magicMissile, []bool{}, []bool{}, time.Now()}
-		Convey("The spell should function", func() {
+		a1 := Action{&p1, &p2, s_magicMissile, []bool{}, []bool{}, time.Now(), make(chan rune)}
 
-			a1.StartSpell()
+		Convey("Test about right choices", func() {
+
+			go a1.StartSpell()
+
+			time.Sleep(1 * time.Second)
+
+			a1.keyChan <- 'h'
+			a1.keyChan <- 'j'
+			a1.keyChan <- 'k'
+			a1.keyChan <- 'h'
+			a1.keyChan <- 'j'
+			a1.keyChan <- 'k'
+			a1.keyChan <- 'g'
+			a1.keyChan <- 'h'
+			a1.keyChan <- 'j'
+
+			time.Sleep(5 * time.Second)
+
+			So(a1.HasGoodIngredients(), ShouldEqual, true)
+		})
+
+		Convey("Test about wrong choices", func() {
+
+			go a1.StartSpell()
+
+			time.Sleep(1 * time.Second)
+
+			a1.keyChan <- 'h'
+			a1.keyChan <- 'j'
+			a1.keyChan <- 'k'
+			a1.keyChan <- 'h'
+			a1.keyChan <- 'j'
+			a1.keyChan <- 'k'
+			a1.keyChan <- 'g'
+			a1.keyChan <- 'h'
+			a1.keyChan <- 's'
+
+			time.Sleep(5 * time.Second)
+
+			So(a1.HasGoodIngredients(), ShouldEqual, false)
 		})
 	})
 

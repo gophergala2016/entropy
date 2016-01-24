@@ -1,5 +1,16 @@
 package keyboard
 
+import "github.com/nsf/termbox-go"
+
+const (
+	RIGHT direction = 1 + iota
+	LEFT
+	UP
+	DOWN
+)
+
+type direction int
+
 type keyboardEventType int
 
 const (
