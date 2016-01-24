@@ -48,7 +48,7 @@ func GameServer(ws *websocket.Conn) {
 	addConn(cmsg.Username, ws)
 	curruser = cmsg.Username
 	for {
-		var msg net.GetUserList //interface{}
+		var msg net.GetUserList
 		err = websocket.JSON.Receive(ws, &msg)
 		if err == io.EOF {
 			rmConn(curruser, ws)
@@ -59,8 +59,6 @@ func GameServer(ws *websocket.Conn) {
 			continue
 		}
 
-		//switch m := msg.(type) {
-		//case net.GetUserList:
 		gp := make(models.GamePlayers)
 		for _, p := range gamePlayers {
 			if p.State == msg.State {
@@ -68,11 +66,7 @@ func GameServer(ws *websocket.Conn) {
 			}
 		}
 
-		websocket.JSON.Send(ws, gp)
-		//default:
-		//	log.Println("Unknown message:", m)
-		//}
-
+		websocket.JSON.Send(ws, net.Message{ResponseUserList: &net.ResponseUserList{gp}})
 	}
 
 }

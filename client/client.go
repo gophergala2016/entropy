@@ -50,14 +50,14 @@ func main() {
 	}
 	for {
 		websocket.JSON.Send(ws, net.GetUserList{State: models.StateConnected})
-		var msg models.GamePlayers //interface{}
+		var msg net.Message
 		websocket.JSON.Receive(ws, &msg)
-		//switch m := msg.(type) {
-		//case models.GamePlayers:
-		for k, _ := range msg {
-			fmt.Println("User: ", k)
+		switch {
+		case msg.ResponseUserList != nil:
+			for k, _ := range msg.ResponseUserList.GamePlayers {
+				fmt.Println("User: ", k)
+			}
 		}
-		//}
 		time.Sleep(1 * time.Second)
 	}
 }

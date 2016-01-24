@@ -5,8 +5,10 @@ import (
 )
 
 type Message struct {
-	Msg     string
-	Version string
+	Connection       *Connection
+	Disconnection    *Disconnection
+	GetUserList      *GetUserList
+	ResponseUserList *ResponseUserList
 }
 
 type Connection struct {
@@ -19,4 +21,8 @@ type Disconnection struct {
 
 type GetUserList struct {
 	State models.GamePlayerState
+}
+
+type ResponseUserList struct {
+	GamePlayers models.GamePlayers
 }
