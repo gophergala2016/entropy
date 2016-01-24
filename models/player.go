@@ -1,7 +1,7 @@
 package models
 
 import (
-	"golang.org/x/net/websocket"
+	"github.com/gorilla/websocket"
 )
 
 type GamePlayerState int

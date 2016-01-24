@@ -18,5 +18,5 @@ type Disconnection struct {
 }
 
 type GetUserList struct {
-	State models.GamePlayerState
+	State *models.GamePlayerState
 }

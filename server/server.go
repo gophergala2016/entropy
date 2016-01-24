@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/gophergala2016/entropy/models"
-	"github.com/gophergala2016/entropy/net"
-	"golang.org/x/net/websocket"
-	"io"
+	//	"github.com/gophergala2016/entropy/net"
+	"github.com/gorilla/websocket"
+	//	"io"
 	"log"
 	"net/http"
 )
@@ -35,6 +35,31 @@ func rmConn(username string, ws *websocket.Conn) {
 	connreg <- regConn{"-", username, ws}
 }
 
+var upgrader = websocket.Upgrader{}
+
+func GameServerHandler(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("upgrade:", err)
+		return
+	}
+	defer ws.Close()
+	for {
+		mt, message, err := ws.ReadMessage()
+		if err != nil {
+			log.Println("read:", err)
+			break
+		}
+		log.Println("msg: ", message)
+		err = ws.WriteMessage(mt, message)
+		if err != nil {
+			log.Println("write:", err)
+			break
+		}
+	}
+}
+
+/*
 func GameServer(ws *websocket.Conn) {
 	var cmsg net.Connection
 	var curruser string
@@ -77,6 +102,8 @@ func GameServer(ws *websocket.Conn) {
 
 }
 
+*/
+
 func connRegistrator() {
 	go func() {
 		for {
@@ -107,7 +134,7 @@ var gamePlayers = make(models.GamePlayers)
 
 func main() {
 	connRegistrator()
-	http.Handle("/game", websocket.Handler(GameServer))
+	http.HandleFunc("/game", GameServerHandler)
 	err := http.ListenAndServe(":12345", nil)
 	if err != nil {
 		panic("ListenAndServe:" + err.Error())
