@@ -5,12 +5,19 @@ import (
 )
 
 type Message struct {
-	Connection       *Connection
-	Disconnection    *Disconnection
-	GetUserList      *GetUserList
-	ResponseUserList *ResponseUserList
-	RequestFight     *RequestFight
-	ResponseFight    *ResponseFight
+	Connection                  *Connection
+	Disconnection               *Disconnection
+	GetUserList                 *GetUserList
+	ResponseUserList            *ResponseUserList
+	RequestFight                *RequestFight
+	ResponseFight               *ResponseFight
+	InArena                     *InArena
+	SelectFightSpells           *SelectFightSpells
+	StartCasting                *StartCasting
+	ResponseSpellCharacteristic *ResponseSpellCharacteristic
+	CastingKey                  *CastingKey
+	ResponseCastingKey          *ResponseCastingKey
+	ResponseSpellResult         *ResponseSpellResult
 }
 
 type Connection struct {
@@ -33,5 +40,34 @@ type RequestFight struct {
 	Opponentname string
 }
 type ResponseFight struct {
-	Opponentname string
+	Opponent models.GamePlayer
+}
+
+type InArena struct {
+}
+
+type SelectFightSpells struct {
+	Spells []models.Spell
+}
+
+type StartCasting struct {
+	caster models.GamePlayer
+}
+
+type ResponseSpellCharacteristic struct {
+	Spell models.Spell
+}
+
+type CastingKey struct {
+	Key rune
+}
+
+type ResponseCastingKey struct {
+	Key  rune
+	Step int
+}
+
+type ResponseSpellResult struct {
+	Caster models.GamePlayer
+	Target models.GamePlayer
 }
